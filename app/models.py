@@ -75,3 +75,41 @@ class SlakeBatch(db.Model):
     notes = db.Column(db.Text, nullable=False, default="")
 
     pond = db.relationship("Pond", back_populates="batches")
+    receipts = db.relationship(
+        "WeighReceipt",
+        back_populates="batch",
+        cascade="all, delete-orphan",
+    )
+
+
+class WeighReceipt(db.Model):
+    """出灰称重回执：一轮出灰（一个熟化批次）最多一张未作废回执。"""
+
+    __tablename__ = "weigh_receipts"
+    __table_args__ = (
+        # 同一熟化批次（本轮出灰）只允许存在一张未作废回执。
+        # voided_at IS NULL 的部分唯一索引，并发抢交时由数据库兜底。
+        db.Index(
+            "uq_receipt_one_active_per_batch",
+            "batch_id",
+            unique=True,
+            postgresql_where=db.text("voided_at IS NULL"),
+            sqlite_where=db.text("voided_at IS NULL"),
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    pond_id = db.Column(db.Integer, db.ForeignKey("ponds.id"), nullable=False)
+    batch_id = db.Column(db.Integer, db.ForeignKey("slake_batches.id"), nullable=False)
+    net_weight_t = db.Column(db.Float, nullable=False)
+    weighed_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utcnow)
+    weigher = db.Column(db.String(64), nullable=False)
+    voided_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow)
+
+    pond = db.relationship("Pond")
+    batch = db.relationship("SlakeBatch", back_populates="receipts")
+
+    @property
+    def is_void(self) -> bool:
+        return self.voided_at is not None

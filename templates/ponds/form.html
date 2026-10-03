@@ -19,7 +19,7 @@
     <input name="code" value="{{ pond.code if pond else '' }}" required />
   </label>
   <label>状态
-    <select name="status" data-form-hint-target="status">
+    <select name="status" data-form-hint-target="status" data-current-status="{{ pond.status if pond else 'filling' }}">
       {% for key, label in status_labels.items() %}
       <option value="{{ key }}" {% if pond and pond.status == key %}selected{% elif not pond and key == 'filling' %}selected{% endif %}>{{ label }}</option>
       {% endfor %}

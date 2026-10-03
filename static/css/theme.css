@@ -425,3 +425,34 @@ button:hover, .btn:hover { background: #1e293b; }
   .floor-head { flex-direction: column; }
   .pond-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* 称重回执 */
+.tile-receipt {
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  justify-self: start;
+}
+.tile-receipt.has-receipt { background: rgba(34, 197, 94, 0.18); color: #166534; }
+.tile-receipt.no-receipt { background: rgba(220, 38, 38, 0.14); color: #991b1b; }
+.receipt-card { border-radius: 12px; padding: 12px 14px; }
+.receipt-ok { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.receipt-missing { background: #fef2f2; border: 1px solid #fecaca; }
+.badge-valid { background: #dcfce7; color: #166534; }
+.badge-void { background: #fee2e2; color: #991b1b; text-decoration: line-through; }
+.row-void td { opacity: 0.6; }
+.muted { color: var(--muted); }
+.btn-small { padding: 4px 10px; font-size: 0.82rem; }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
+.filter-bar {
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+}
+.filter-bar label { display: flex; align-items: center; gap: 8px; }

@@ -22,9 +22,14 @@ class FormHintController extends Controller {
   }
   update() {
     if (!this.hasHintTarget || !this.hasStatusTarget) return
-    if (this.statusTarget.value === "drawn") {
+    const current = this.statusTarget.dataset.currentStatus
+    const value = this.statusTarget.value
+    if (value === "drawn") {
       this.hintTarget.textContent =
-        "当前选择「已出灰」：须存在最近批次，且峰值温度已记录并 ≥ 60℃。"
+        "当前选择「已出灰」：须存在最近批次，且峰值温度已记录并 ≥ 60℃；称重不参与出灰判断。"
+    } else if (current === "drawn" && value !== "drawn") {
+      this.hintTarget.textContent =
+        "从「已出灰」拨回注水/熟化前，本轮必须已有合格未作废的称重回执，否则将被拒绝。"
     } else {
       this.hintTarget.textContent =
         "出灰前请确认最近熟化批次已记录峰值温度且不低于 60℃。"

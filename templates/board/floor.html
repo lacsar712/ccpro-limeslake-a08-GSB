@@ -55,6 +55,11 @@
         {% endif %}
       </span>
       <span class="tile-cap">{{ '%.0f'|format(pond.capacity_m3) }} m³</span>
+      {% if pond.status == 'drawn' %}
+      <span class="tile-receipt {% if card.receipt %}has-receipt{% else %}no-receipt{% endif %}">
+        {% if card.receipt %}本轮回执 {{ '%.1f'|format(card.receipt.net_weight_t) }}t{% else %}本轮无回执{% endif %}
+      </span>
+      {% endif %}
     </a>
     {% else %}
     <p class="empty-board">当前厂区暂无熟化池</p>
@@ -101,6 +106,24 @@
         {% endif %}
       </section>
 
+      {% if selected.status == 'drawn' %}
+      <section class="batch-card receipt-card {% if selected_receipt %}receipt-ok{% else %}receipt-missing{% endif %}">
+        <h3>本轮称重回执</h3>
+        {% if selected_receipt %}
+        <dl class="kv">
+          <div><dt>净重</dt><dd>{{ '%.2f'|format(selected_receipt.net_weight_t) }} 吨</dd></div>
+          <div><dt>过磅时刻</dt><dd>{{ selected_receipt.weighed_at.strftime('%Y-%m-%d %H:%M') if selected_receipt.weighed_at else '—' }}</dd></div>
+          <div><dt>司磅人</dt><dd>{{ selected_receipt.weigher }}</dd></div>
+        </dl>
+        <p class="hint">回执合格，可拨回注水或开下一班。</p>
+        {% else %}
+        <p class="hint">本轮尚无合格未作废回执，<strong>不得拨回注水、不得开下一班</strong>。</p>
+        <a class="btn" href="{{ url_for('receipts.create_receipt', pond_id=selected.id) }}">交称重回执</a>
+        {% endif %}
+        <a class="btn ghost btn-small" href="{{ url_for('receipts.list_receipts', pond_id=selected.id, scope='all') }}">查看该池回执</a>
+      </section>
+      {% endif %}
+
       {% if selected_batch %}
       <form
         class="ops-form"
@@ -121,7 +144,7 @@
           <textarea name="batch_notes" rows="2">{{ selected_batch.notes }}</textarea>
         </label>
         <label>池状态
-          <select name="status" data-form-hint-target="status">
+          <select name="status" data-form-hint-target="status" data-current-status="{{ selected.status }}">
             {% for key, label in status_labels.items() %}
             <option value="{{ key }}" {% if selected.status == key %}selected{% endif %}>{{ label }}</option>
             {% endfor %}

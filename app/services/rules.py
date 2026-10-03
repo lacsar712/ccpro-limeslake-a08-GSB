@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.models import Pond, SlakeBatch
+from app.models import Pond, SlakeBatch, WeighReceipt
 
 MIN_PEAK_TEMP_FOR_DRAWN = 60.0
 
@@ -17,10 +17,22 @@ def latest_batch_for_pond(pond: Pond) -> SlakeBatch | None:
     return max(pond.batches, key=lambda b: b.started_at)
 
 
+def latest_valid_receipt_for_pond(pond: Pond) -> WeighReceipt | None:
+    """本轮（最近一批次）最新一张合格且未作废的称重回执；没有则 None。"""
+    batch = latest_batch_for_pond(pond)
+    if batch is None:
+        return None
+    active = [r for r in batch.receipts if r.voided_at is None]
+    if not active:
+        return None
+    return max(active, key=lambda r: r.weighed_at)
+
+
 def can_mark_pond_drawn(pond: Pond) -> tuple[bool, str]:
     """
     熟化池转为「已出灰」(drawn) 的前提：
     最近一条熟化批次的峰值温度已记录，且 >= 60℃。
+    称重不参与出灰判断。
     """
     latest = latest_batch_for_pond(pond)
     if latest is None:
@@ -42,3 +54,19 @@ def assert_can_set_pond_status(pond: Pond, new_status: str) -> None:
         ok, msg = can_mark_pond_drawn(pond)
         if not ok:
             raise RuleError(msg)
+    elif pond.status == Pond.STATUS_DRAWN:
+        # 已出灰 -> 非已出灰（拨回注水/熟化）前，本轮必须有合格未作废回执。
+        if latest_valid_receipt_for_pond(pond) is None:
+            raise RuleError(
+                "本轮出灰尚未交合格称重回执，不得拨回注水或熟化；"
+                "请先在称重回执专页交单"
+            )
+
+
+def assert_can_start_batch(pond: Pond) -> None:
+    """在已出灰池上开新班前，必须先有本轮合格未作废回执。"""
+    if pond.status == Pond.STATUS_DRAWN:
+        if latest_valid_receipt_for_pond(pond) is None:
+            raise RuleError(
+                f"{pond.code} 本轮出灰尚未交合格称重回执，不得开下一班注水"
+            )

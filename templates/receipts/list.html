@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}称重回执{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>称重回执</h1>
+    <p>本轮出灰后必须先交合格回执，池才能拨回注水或开下一班；作废仅限管理员。</p>
+  </div>
+  <a class="btn" href="{{ url_for('receipts.create_receipt') }}">新建回执</a>
+</header>
+
+<form class="panel filter-bar" method="get">
+  <label>厂区
+    <select name="plant_id" onchange="this.form.submit()">
+      <option value="">全部厂区</option>
+      {% for plant in plants %}
+      <option value="{{ plant.id }}" {% if plant_id == plant.id %}selected{% endif %}>{{ plant.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>熟化池
+    <select name="pond_id" onchange="this.form.submit()">
+      <option value="">全部池</option>
+      {% for pond in ponds %}
+      <option value="{{ pond.id }}" {% if pond_id == pond.id %}selected{% endif %}>
+        {{ pond.code }}（{{ status_labels.get(pond.status, pond.status) }}）
+      </option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>范围
+    <select name="scope" onchange="this.form.submit()">
+      <option value="active" {% if scope == 'active' %}selected{% endif %}>仅未作废</option>
+      <option value="void" {% if scope == 'void' %}selected{% endif %}>仅已作废</option>
+      <option value="all" {% if scope == 'all' %}selected{% endif %}>全部</option>
+    </select>
+  </label>
+  <noscript><button type="submit">筛选</button></noscript>
+</form>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>熟化池</th>
+      <th>净重（吨）</th>
+      <th>过磅时刻</th>
+      <th>司磅人</th>
+      <th>状态</th>
+      <th>作废时刻</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in receipts %}
+    <tr class="{% if r.is_void %}row-void{% endif %}">
+      <td>{{ r.pond.code }} <small>({{ status_labels.get(r.pond.status, r.pond.status) }})</small></td>
+      <td>{{ '%.2f'|format(r.net_weight_t) }}</td>
+      <td>{{ r.weighed_at.strftime('%Y-%m-%d %H:%M') if r.weighed_at else '—' }}</td>
+      <td>{{ r.weigher }}</td>
+      <td>
+        {% if r.is_void %}
+        <span class="badge badge-void">已作废</span>
+        {% else %}
+        <span class="badge badge-valid">有效</span>
+        {% endif %}
+      </td>
+      <td>{{ r.voided_at.strftime('%Y-%m-%d %H:%M') if r.voided_at else '—' }}</td>
+      <td>
+        {% if not r.is_void and current_user.role == 'admin' %}
+        <form
+          method="post"
+          action="{{ url_for('receipts.void_receipt', receipt_id=r.id) }}"
+          onsubmit="return confirm('确认作废 {{ r.pond.code }} 的称重回执？作废后不得再凭它放行。');"
+          style="display:inline"
+        >
+          <button type="submit" class="btn btn-danger btn-small">作废</button>
+        </form>
+        {% elif not r.is_void %}
+        <small class="muted">仅管理员可作废</small>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7">没有符合条件的回执</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
