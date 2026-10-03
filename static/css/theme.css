@@ -210,6 +210,17 @@ body {
 .tile-status { font-weight: 700; font-size: 0.95rem; }
 .tile-meta, .tile-cap { font-size: 0.85rem; opacity: 0.9; }
 
+.tile-receipt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  justify-self: start;
+}
+.tile-receipt.has-receipt { background: rgba(15, 118, 110, 0.16); color: var(--ok); }
+.tile-receipt.no-receipt { background: rgba(185, 28, 28, 0.12); color: var(--danger); }
+.tile-receipt.pending-receipt { background: rgba(100, 116, 139, 0.14); color: var(--muted); }
+
 .empty-board {
   grid-column: 1 / -1;
   color: var(--muted);
@@ -419,6 +430,43 @@ button:hover, .btn:hover { background: #1e293b; }
   gap: 14px;
 }
 .actions { display: flex; gap: 10px; align-items: center; }
+
+/* 称重回执专页 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.filter-bar label { font-size: 0.88rem; }
+.filter-bar select { min-width: 130px; }
+.badge-active { background: #ccfbf1; color: var(--ok); }
+.badge-void { background: #e2e8f0; color: var(--muted); text-decoration: line-through; }
+.row-void { opacity: 0.62; }
+.void-form { display: flex; gap: 6px; align-items: center; }
+.void-form input { padding: 6px 8px; width: 150px; font-size: 0.85rem; }
+.btn-danger {
+  background: var(--danger);
+  padding: 7px 12px;
+  font-size: 0.85rem;
+}
+.btn-danger:hover { background: #991b1b; }
+.receipt-card .btn-receipt { justify-self: start; padding: 8px 14px; font-size: 0.9rem; margin-top: 6px; }
+.receipt-missing {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 12px;
+}
+.receipt-ok { color: var(--ok); }
+.receipt-warn { color: var(--danger); }
+.receipt-link { margin: 4px 0 0; font-size: 0.86rem; }
+.receipt-link a { color: var(--lime-mid); font-weight: 600; text-decoration: none; }
 
 @media (max-width: 720px) {
   .topbar, .ops-main { padding-left: 16px; padding-right: 16px; }

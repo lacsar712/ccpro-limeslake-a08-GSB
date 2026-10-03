@@ -5,6 +5,7 @@ from flask_login import login_required
 
 from app.extensions import db
 from app.models import Pond, SlakeBatch
+from app.services.rules import RuleError, assert_can_start_batch
 
 bp = Blueprint("batches", __name__, url_prefix="/batches")
 
@@ -26,6 +27,15 @@ def create_batch():
     ponds = Pond.query.order_by(Pond.code).all()
     if request.method == "POST":
         pond_id = int(request.form["pond_id"])
+        pond = db.session.get(Pond, pond_id)
+        if pond is None:
+            flash("熟化池不存在", "error")
+            return render_template("batches/form.html", ponds=ponds, batch=None)
+        try:
+            assert_can_start_batch(pond)
+        except RuleError as exc:
+            flash(str(exc), "error")
+            return render_template("batches/form.html", ponds=ponds, batch=None)
         started_raw = request.form.get("started_at") or ""
         target = float(request.form.get("target_temp_c") or 80)
         peak_raw = (request.form.get("peak_temp_c") or "").strip()

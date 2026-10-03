@@ -16,6 +16,7 @@ class FlashController extends Controller {
 
 class FormHintController extends Controller {
   static targets = ["status", "hint"]
+  static values = { receipt: Boolean, drawn: Boolean }
   connect() {
     this.update()
     this.statusTarget?.addEventListener("change", () => this.update())
@@ -25,6 +26,9 @@ class FormHintController extends Controller {
     if (this.statusTarget.value === "drawn") {
       this.hintTarget.textContent =
         "当前选择「已出灰」：须存在最近批次，且峰值温度已记录并 ≥ 60℃。"
+    } else if (this.drawnValue && !this.receiptValue) {
+      this.hintTarget.textContent =
+        "本轮尚无合格且未作废的称重回执，从已出灰拨回将被拒绝，请先到称重回执专页交据。"
     } else {
       this.hintTarget.textContent =
         "出灰前请确认最近熟化批次已记录峰值温度且不低于 60℃。"

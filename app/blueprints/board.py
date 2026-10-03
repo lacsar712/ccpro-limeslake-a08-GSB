@@ -3,7 +3,12 @@ from flask_login import login_required
 
 from app.extensions import db
 from app.models import Plant, Pond
-from app.services.rules import RuleError, assert_can_set_pond_status, latest_batch_for_pond
+from app.services.rules import (
+    RuleError,
+    active_receipt_for_round,
+    assert_can_set_pond_status,
+    latest_batch_for_pond,
+)
 
 bp = Blueprint("board", __name__, url_prefix="/board")
 
@@ -36,15 +41,18 @@ def floor_plan():
     pond_cards = []
     for pond in ponds:
         batch = latest_batch_for_pond(pond)
-        pond_cards.append({"pond": pond, "batch": batch})
+        receipt = active_receipt_for_round(pond)
+        pond_cards.append({"pond": pond, "batch": batch, "receipt": receipt})
 
     selected_id = request.args.get("pond", type=int)
     selected = None
     selected_batch = None
+    selected_receipt = None
     if selected_id:
         selected = next((c["pond"] for c in pond_cards if c["pond"].id == selected_id), None)
         if selected:
             selected_batch = latest_batch_for_pond(selected)
+            selected_receipt = active_receipt_for_round(selected)
 
     return render_template(
         "board/floor.html",
@@ -53,6 +61,7 @@ def floor_plan():
         pond_cards=pond_cards,
         selected=selected,
         selected_batch=selected_batch,
+        selected_receipt=selected_receipt,
         status_labels=STATUS_LABELS,
     )
 

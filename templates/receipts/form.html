@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}新建称重回执{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>新建称重回执</h1>
+    <p>一轮出灰同一池最多一张未作废回执；净重须大于 0。</p>
+  </div>
+</header>
+<form class="panel" method="post">
+  <label>熟化池（仅列出本轮已出灰的池）
+    <select name="pond_id" required>
+      <option value="">请选择</option>
+      {% for pond in ponds %}
+        {% if pond.status == 'drawn' %}
+        <option value="{{ pond.id }}">{{ pond.plant.name }} · {{ pond.code }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </label>
+  <label>净重（吨）
+    <input name="net_weight_t" type="number" step="0.01" min="0.01" required placeholder="例如 32.5" />
+  </label>
+  <label>过磅时刻（留空取当前时刻）
+    <input name="weighed_at" type="datetime-local" step="1" />
+  </label>
+  <label>司磅人
+    <input name="weigher" type="text" maxlength="64" required placeholder="司磅工姓名" />
+  </label>
+  <div class="actions">
+    <button type="submit">交回执</button>
+    <a class="btn ghost" href="{{ url_for('receipts.list_receipts') }}">返回回执专页</a>
+  </div>
+</form>
+{% endblock %}

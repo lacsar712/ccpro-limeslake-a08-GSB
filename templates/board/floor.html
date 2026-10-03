@@ -37,6 +37,7 @@
     {% for card in pond_cards %}
     {% set pond = card.pond %}
     {% set batch = card.batch %}
+    {% set receipt = card.receipt %}
     <a
       class="pond-tile status-{{ pond.status }} {% if selected and selected.id == pond.id %}selected{% endif %}"
       role="listitem"
@@ -53,6 +54,15 @@
         {% else %}
           无批次
         {% endif %}
+      </span>
+      <span class="tile-receipt {% if receipt %}has-receipt{% elif pond.status == 'drawn' %}no-receipt{% else %}pending-receipt{% endif %}">
+        {%- if receipt -%}
+          ✓ 本轮回执 {{ '%.1f'|format(receipt.net_weight_t) }}吨
+        {%- elif pond.status == 'drawn' -%}
+          ✗ 本轮无回执
+        {%- else -%}
+          待出灰
+        {%- endif -%}
       </span>
       <span class="tile-cap">{{ '%.0f'|format(pond.capacity_m3) }} m³</span>
     </a>
@@ -101,12 +111,32 @@
         {% endif %}
       </section>
 
+      <section class="batch-card receipt-card {% if selected.status == 'drawn' and not selected_receipt %}receipt-missing{% endif %}">
+        <h3>本轮称重回执</h3>
+        {% if selected_receipt %}
+        <dl class="kv">
+          <div><dt>净重</dt><dd>{{ '%.2f'|format(selected_receipt.net_weight_t) }} 吨</dd></div>
+          <div><dt>过磅</dt><dd>{{ selected_receipt.weighed_at.strftime('%Y-%m-%d %H:%M') }}</dd></div>
+          <div><dt>司磅</dt><dd>{{ selected_receipt.weigher }}</dd></div>
+        </dl>
+        <p class="hint receipt-ok">回执合格有效，可拨回注水或开下一班。</p>
+        {% elif selected.status == 'drawn' %}
+        <p class="hint receipt-warn">本轮出灰已完成但尚无合格回执：不得拨回注水中，也不得开下一班。</p>
+        <a class="btn btn-receipt" href="{{ url_for('receipts.create_receipt') }}">去交称重回执</a>
+        {% else %}
+        <p class="hint">出灰完成后须先交称重回执。</p>
+        {% endif %}
+        <p class="receipt-link"><a href="{{ url_for('receipts.list_receipts', pond_id=selected.id) }}">查看该池全部回执 →</a></p>
+      </section>
+
       {% if selected_batch %}
       <form
         class="ops-form"
         method="post"
         action="{{ url_for('board.pond_ops', pond_id=selected.id) }}"
         data-controller="form-hint"
+        data-form-hint-receipt-value="{{ 'true' if selected_receipt else 'false' }}"
+        data-form-hint-drawn-value="{{ 'true' if selected.status == 'drawn' else 'false' }}"
       >
         <label>登记 / 修正峰值温度 ℃
           <input
